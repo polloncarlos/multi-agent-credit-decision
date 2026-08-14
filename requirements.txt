@@ -1,0 +1,41 @@
+# Embeddings
+sentence-transformers==3.0.1
+
+# Vector store
+chromadb==0.5.3
+
+# LLM / Orquestração
+langchain==0.2.16
+langchain-community==0.2.16
+groq==0.9.0
+
+# API
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+
+# Interface
+streamlit==1.36.0
+
+# Dataset / dados
+datasets==2.21.0
+pandas==2.2.2
+numpy==1.26.4
+
+# SQL (sqlite3 já vem na stdlib — sqlalchemy para interface pythonica)
+sqlalchemy==2.0.30
+
+# Utilitários
+python-dotenv==1.0.1
+
+# Notebooks
+jupyter==1.0.0
+ipykernel==6.29.4
+nbformat==5.10.4
+
+# Visualização
+matplotlib==3.9.1
+seaborn==0.13.2
+
+# Qualidade de código
+black==24.4.2
+pytest==8.2.2
