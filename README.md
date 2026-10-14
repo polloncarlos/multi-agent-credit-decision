@@ -62,10 +62,6 @@ Só entram fontes reais, oficiais e que permitem publicação.
 | NSMO (National Survey of Mortgage Originations) Public Use File, da FHFA e do CFPB | Financiamentos aprovados, com DTI, VantageScore 3.0 e reserva após o fechamento | Segundo teste, na faixa de DTI de 44% a 50% | Terms of Service da FHFA |
 | HUD Handbook 4000.1 e Mortgagee Letters | Regras do FHA para análise de crédito | Norma consultada pelo agente | Domínio público |
 
-Fannie Mae e Ginnie Mae ficaram de fora porque os termos de uso restringem a finalidade da
-análise e a redistribuição. Bases de aprovação de crédito do Kaggle também, por serem sintéticas
-ou de origem incerta.
-
 ## Metodologia
 
 O projeto segue as fases do CRISP-DM.
