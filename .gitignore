@@ -1,6 +1,12 @@
 # ChromaDB (vector store persistido localmente)
 chroma_db/
 
+# HMDA bruto (> 1 GB, acima do limite do GitHub; reproduzível via python -m src.download_hmda)
+data/raw/hmda/
+
+# Cópias locais de versões antigas
+backup/
+
 # Variáveis de ambiente
 .env
 
