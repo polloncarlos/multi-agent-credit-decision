@@ -21,6 +21,12 @@ datasets==2.21.0
 pandas==2.2.2
 numpy==1.26.4
 
+# Leitura do PDF do Handbook 4000.1
+pypdf==6.19.0
+
+# Download do HMDA (src/download_hmda.py)
+requests==2.34.2
+
 # SQL (sqlite3 já vem na stdlib — sqlalchemy para interface pythonica)
 sqlalchemy==2.0.30
 
