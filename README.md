@@ -4,8 +4,8 @@ Sistema multi-agente que recomendaria a decisão de um pedido de financiamento i
 (Federal Housing Administration) em análise manual, citando a seção do HUD Handbook 4000.1 que
 sustenta cada recomendação.
 
-> Projeto de portfólio em construção, hoje na fase de entendimento dos dados. Não serve para
-> decisão real de crédito.
+> Projeto de portfólio em construção. O entendimento dos dados terminou, e a próxima fase é a
+> preparação. Não serve para decisão real de crédito.
 
 ## O problema
 
@@ -35,11 +35,18 @@ que falta para decidir. O agente recomenda e o analista decide.
 O gabarito é a decisão real do banco, registrada no HMDA. Ela é só uma aproximação da decisão
 correta, porque o banco também olha score e histórico de crédito, que a base pública não traz.
 Os resultados serão reportados por faixa de DTI (Debt to Income, a parte da renda comprometida
-com dívidas), já que cada faixa tem informação diferente disponível para decidir.
+com dívidas), já que cada faixa tem informação diferente disponível para decidir. A faixa de
+50% a 60% fica fora do resultado principal e é reportada à parte. Ela passa do teto da análise
+manual, que é 50%, então um pedido aprovado ali só pode ter passado pelo sistema automático.
 
-O agente precisa vencer dois adversários simples: aprovar sempre e uma regra fixa em código, que
-aprova com DTI até 43% e nega acima disso. As regras do Handbook implementadas em código servem
-de teto. Também serão medidos:
+Nos casos em que a norma só permite aprovar mediante uma comprovação que a base não mostra,
+como um fator compensatório, a resposta esperada é suspender pedindo a comprovação, e o agente
+é avaliado contra a norma, não contra o banco.
+
+No HMDA, o agente precisa vencer dois adversários simples, aprovar sempre e uma regra fixa em
+código que aprova com DTI até 43% e nega acima disso. Na NSMO, que só tem pedidos aprovados,
+aprovar sempre acertaria tudo, então ali o agente é avaliado contra a norma aplicada em código.
+As regras do Handbook implementadas em código servem de teto. Também serão medidos:
 
 - o motivo da negativa, comparado ao motivo registrado pelo banco;
 - o tempo de resposta por caso, com referência de 60 segundos;
@@ -49,8 +56,10 @@ de teto. Também serão medidos:
   norma sem alteração no código.
 
 Os pedidos são divididos uma única vez, com semente fixa, em um grupo de ajuste, onde o prompt
-pode ser mexido à vontade, e um grupo da nota final, rodado uma vez só no fim. Se a regra fixa
-empatar com o agente ou vencê-lo, esse será o resultado reportado.
+pode ser mexido à vontade, e um grupo da nota final, rodado uma vez só no fim. O sorteio mantém
+a proporção de cada finalidade do pedido (compra, refinanciamento com ou sem saque), porque a
+chance de negativa muda muito entre elas. Se a regra fixa empatar com o agente ou vencê-lo, esse
+será o resultado reportado.
 
 ## Dados e norma
 
@@ -68,7 +77,10 @@ O projeto segue as fases do CRISP-DM.
 
 - [x] Entendimento do negócio: decisão, ações, custo de errar e métrica definidos antes de abrir
   os dados.
-- [ ] Entendimento dos dados: em andamento.
+- [x] Entendimento dos dados ([notebook 01](notebooks/01_data_understanding.ipynb)): o DTI
+  publicado no HMDA só separa com clareza negados e aprovados acima de 60%. Abaixo disso, a
+  decisão depende de campos que a base não traz, como score, reserva e histórico de crédito. Por
+  isso a avaliação é reportada por faixa.
 - [ ] Preparação dos dados: seleção dos pedidos, separação dos dois grupos, divisão do Handbook
   por seção e geração dos embeddings.
 - [ ] Modelagem: arquitetura multi-agente com tool-use. O framework de orquestração (LangGraph ou
