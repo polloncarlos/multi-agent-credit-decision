@@ -1,11 +1,17 @@
-"""Matriz de razões da análise manual, Handbook 4000.1 II.A.5.d.viii (Update 18).
+"""Regras do Handbook 4000.1 (Update 18) usadas para ler o dado: tetos de CLTV e a
+matriz de razões da análise manual (II.A.5.d.viii).
 
-A matriz é igual na Update 17 e na Update 18 (texto comparado em 2026-09-29).
+A matriz é igual na Update 17 e na Update 18.
 """
 
 import math
 
 SECTION = "II.A.5.d.viii"
+
+# Teto de CLTV por finalidade (loan_purpose do HMDA): compra (II.A.2),
+# refinanciamento sem saque e com saque (II.A.8). O Streamline não tem teto, e o HMDA
+# não o separa dos outros refinanciamentos sem saque.
+CLTV_CAP = {"1": 96.5, "31": 97.75, "32": 80.0}
 
 # Linhas da matriz para score a partir de 580: (PTI máx., DTI máx., exigência).
 ROWS_580 = [
@@ -15,21 +21,34 @@ ROWS_580 = [
     (40, 50, "2 fatores"),
 ]
 RESERVE_MIN_PAYMENTS = 3  # II.A.5.d.ix(B), imóveis de 1 e 2 unidades
+MIN_SCORE = 500  # abaixo disso o cliente não é elegível ao FHA (MDCS)
+INELIGIBLE = "inelegível (score abaixo de 500)"
+
+
+def sem_valor(x: float | None) -> bool:
+    """True se o valor está ausente (None ou NaN)."""
+    return x is None or math.isnan(x)
 
 
 def cabe_na_linha(dti: float, pti: float, max_pti: float, max_dti: float) -> bool:
     """True se o caso respeita os limites da linha. PTI ausente não barra o caso."""
-    sem_pti = pti is None or math.isnan(pti)
-    pti_ok = sem_pti or pti <= max_pti
+    pti_ok = sem_valor(pti) or pti <= max_pti
     return dti <= max_dti and pti_ok
 
 
 def manual_requirement(dti: float, pti: float, score: float | None) -> str:
-    """Exigência da matriz manual para o caso, ou 'fora da matriz'.
+    """Exigência da matriz manual para o caso, 'fora da matriz' ou inelegível.
 
     `pti` ausente (NaN) é tratado como compatível com qualquer linha, e o DTI decide.
+    No HMDA o PTI não é publicado; tratar a falta como compatível é decisão do projeto:
+    lacuna da base, não pendência do cliente.
+
+    `score` ausente (None ou NaN) usa a linha "500 a 579 ou sem score" da matriz, a
+    mais restritiva. Score abaixo de 500 não é elegível ao FHA.
     """
-    if score is None or score < 580:
+    if not sem_valor(score) and score < MIN_SCORE:
+        return INELIGIBLE
+    if sem_valor(score) or score < 580:
         if cabe_na_linha(dti, pti, 31, 43):
             return "nenhum fator"
         return "fora da matriz"
@@ -37,3 +56,32 @@ def manual_requirement(dti: float, pti: float, score: float | None) -> str:
         if cabe_na_linha(dti, pti, max_pti, max_dti):
             return requirement
     return "fora da matriz"
+
+
+def manual_requirements(dtis, ptis, scores) -> list[str]:
+    """Aplica manual_requirement a cada caso, na ordem das listas recebidas."""
+    requirements = []
+    for dti, pti, score in zip(dtis, ptis, scores):
+        requirements.append(manual_requirement(dti, pti, score))
+    return requirements
+
+
+def norm_reading(requirement: str, has_reserve: bool) -> str:
+    """O que a norma permite concluir na NSMO, dada a exigência e a reserva.
+
+    Só a reserva pode ser verificada na NSMO; os outros fatores compensatórios não
+    estão na base.
+    """
+    if requirement in ("fora da matriz", INELIGIBLE):
+        return "fora da matriz manual"
+    if requirement == "sem dívida discricionária":
+        return "exigência não informada na base"
+    if requirement == "1 fator":
+        if has_reserve:
+            return "exigência verificada"
+        return "fator não verificado"
+    if requirement == "2 fatores":
+        if has_reserve:
+            return "1 de 2 fatores verificado"
+        return "nenhum de 2 fatores verificado"
+    return "exigência verificada"
