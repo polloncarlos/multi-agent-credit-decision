@@ -8,10 +8,13 @@ import math
 
 SECTION = "II.A.5.d.viii"
 
-# Teto de CLTV por finalidade (loan_purpose do HMDA): compra (II.A.2),
-# refinanciamento sem saque e com saque (II.A.8). O Streamline não tem teto, e o HMDA
-# não o separa dos outros refinanciamentos sem saque.
+# Teto de CLTV por finalidade (loan_purpose do HMDA), com score a partir de 580:
+# compra (II.A.2), refinanciamento sem saque e com saque (II.A.8). O Streamline não tem
+# teto, e o HMDA não o separa dos outros refinanciamentos sem saque.
 CLTV_CAP = {"1": 96.5, "31": 97.75, "32": 80.0}
+# Com score de 500 a 579, o LTV fica limitado a 90% em qualquer finalidade
+# (II.A.2.b.i). A norma limita o LTV; o HMDA só publica o CLTV, que é maior ou igual.
+CLTV_CAP_SCORE_500_579 = 90.0
 
 # Linhas da matriz para score a partir de 580: (PTI máx., DTI máx., exigência).
 ROWS_580 = [
@@ -28,6 +31,19 @@ INELIGIBLE = "inelegível (score abaixo de 500)"
 def sem_valor(x: float | None) -> bool:
     """True se o valor está ausente (None ou NaN)."""
     return x is None or math.isnan(x)
+
+
+def cltv_cap(purpose: str, score: float | None) -> float:
+    """Teto de CLTV da finalidade, com o corte por score da II.A.2.b.i.
+
+    `score` ausente (None ou NaN) usa o teto da finalidade sem o corte. No HMDA o score
+    não é publicado; tratar a falta assim é decisão do projeto: lacuna da base, não
+    pendência do cliente (o banco puxa o relatório de crédito em todo pedido).
+    """
+    cap = CLTV_CAP[purpose]
+    if not sem_valor(score) and score < 580:
+        return min(cap, CLTV_CAP_SCORE_500_579)
+    return cap
 
 
 def cabe_na_linha(dti: float, pti: float, max_pti: float, max_dti: float) -> bool:
