@@ -1,6 +1,7 @@
 """Baixa o HMDA público (CFPB) de um ano, EUA inteiro, filtrado para pedidos FHA.
 
 Uso, da raiz do projeto: python -m src.download_hmda
+Depois, python -m src.raw_parquet grava o recorte em parquet que os notebooks leem.
 """
 
 from pathlib import Path

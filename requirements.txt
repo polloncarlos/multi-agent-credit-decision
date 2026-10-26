@@ -20,6 +20,7 @@ streamlit==1.36.0
 datasets==2.21.0
 pandas==2.2.2
 numpy==1.26.4
+pyarrow==24.0.0
 
 # Leitura do PDF do Handbook 4000.1
 pypdf==6.19.0

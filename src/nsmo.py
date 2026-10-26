@@ -1,6 +1,7 @@
 """Leitura e rótulos do NSMO Public Use File v70 (FHFA e CFPB)."""
 
 import os
+import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -9,10 +10,17 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
 
-# Fica junto da cópia obrigatória dos Terms of Service da FHFA.
+# CSV baixado da FHFA, grande demais para o repo: fica em LARGE_DATA_DIR (.env) ou em
+# data/raw, junto da cópia dos Terms of Service salva no download.
 NSMO_DIR = Path(os.getenv("LARGE_DATA_DIR", ROOT / "data" / "raw")) / "nsmo"
 NSMO_CSV = NSMO_DIR / "nsmo_v70_1324_puf.csv"
-NSMO_TERMS = NSMO_DIR / "nsmo_terms_of_service.pdf"
+NSMO_TERMS_DOWNLOADED = NSMO_DIR / "nsmo_terms_of_service.pdf"
+
+# Recorte com as colunas de COLUMNS, em parquet, versionado no repo. Os termos da FHFA
+# exigem a cópia do Agreement junto do dado, por isso ela vai para a mesma pasta.
+NSMO_REPO_DIR = ROOT / "data" / "raw" / "nsmo"
+NSMO_PARQUET = NSMO_REPO_DIR / "nsmo_v70_1324_puf.parquet"
+NSMO_TERMS = NSMO_REPO_DIR / "nsmo_terms_of_service.pdf"
 
 DISCLAIMER = (
     "The opinions and analyses contained herein are solely of the users/authors of any "
@@ -58,6 +66,17 @@ X5001 = {
 X36 = {1: "usou", 2: "não usou"}
 
 
-def load_nsmo(path: Path = NSMO_CSV) -> pd.DataFrame:
-    """Lê o CSV da NSMO só com as colunas de COLUMNS."""
-    return pd.read_csv(path, usecols=COLUMNS)
+def save_nsmo_parquet(
+    csv_path: Path = NSMO_CSV, parquet_path: Path = NSMO_PARQUET
+) -> Path:
+    """Grava o recorte em parquet e copia os Terms of Service para a mesma pasta."""
+    nsmo = pd.read_csv(csv_path, usecols=COLUMNS)
+    parquet_path.parent.mkdir(parents=True, exist_ok=True)
+    nsmo.to_parquet(parquet_path, index=False)
+    shutil.copyfile(NSMO_TERMS_DOWNLOADED, parquet_path.parent / NSMO_TERMS.name)
+    return parquet_path
+
+
+def load_nsmo(path: Path = NSMO_PARQUET) -> pd.DataFrame:
+    """Lê o recorte da NSMO em parquet."""
+    return pd.read_parquet(path)

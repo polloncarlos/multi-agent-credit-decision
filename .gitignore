@@ -1,8 +1,9 @@
 # ChromaDB (vector store persistido localmente)
 chroma_db/
 
-# HMDA bruto (> 1 GB, acima do limite do GitHub; reproduzível via python -m src.download_hmda)
-data/raw/hmda/
+# CSV baixados (HMDA 733 MB, NSMO 160 MB), acima do limite do GitHub.
+data/raw/**/*.csv
+data/raw/**/*.part
 
 # Cópias locais de versões antigas
 backup/

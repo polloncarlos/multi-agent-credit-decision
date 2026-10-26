@@ -3,15 +3,19 @@
 import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env")
 
-# Arquivo grande demais para o repo: fica em LARGE_DATA_DIR (.env) ou em data/raw.
+# CSV baixado da CFPB, grande demais para o repo: fica em LARGE_DATA_DIR (.env) ou em
+# data/raw.
 HMDA_DIR = Path(os.getenv("LARGE_DATA_DIR", ROOT / "data" / "raw")) / "hmda"
 HMDA_CSV = HMDA_DIR / "hmda_2025_fha.csv"
+# Recorte do CSV com as colunas de COLUMNS, em parquet, versionado no repo.
+HMDA_PARQUET = ROOT / "data" / "raw" / "hmda" / "hmda_2025_fha.parquet"
 
 # Campos usados no Data Understanding: decisão, motivos e o que a norma cita.
 COLUMNS = [
@@ -102,9 +106,22 @@ DTI_ORDER = (
 )
 
 
-def load_hmda(path: Path = HMDA_CSV, nrows: int | None = None) -> pd.DataFrame:
-    """Lê o CSV do HMDA só com as colunas de COLUMNS, tudo como texto."""
-    return pd.read_csv(path, usecols=COLUMNS, dtype=str, nrows=nrows)
+def save_hmda_parquet(
+    csv_path: Path = HMDA_CSV, parquet_path: Path = HMDA_PARQUET
+) -> Path:
+    """Grava em parquet as colunas de COLUMNS do CSV baixado, tudo como texto."""
+    hmda = pd.read_csv(csv_path, usecols=COLUMNS, dtype=str)
+    parquet_path.parent.mkdir(parents=True, exist_ok=True)
+    hmda.to_parquet(parquet_path, index=False)
+    return parquet_path
+
+
+def load_hmda(path: Path = HMDA_PARQUET) -> pd.DataFrame:
+    """Lê o recorte do HMDA em parquet, tudo como texto."""
+    hmda = pd.read_parquet(path)
+    # O parquet devolve o campo vazio como None; NaN deixa igual à leitura do CSV.
+    hmda = hmda.where(hmda.notna(), np.nan)
+    return hmda
 
 
 def dti_band(dti: pd.Series) -> pd.Series:
