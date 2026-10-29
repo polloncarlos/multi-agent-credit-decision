@@ -21,8 +21,8 @@ SHA-256 acima permite conferir se o CSV baixado é o mesmo usado aqui.
 
 ## NSMO (National Survey of Mortgage Originations)
 
-- Arquivo: `raw/nsmo/nsmo_v70_1324_puf.parquet` (62.359 financiamentos, 16 colunas,
-  0,8 MB).
+- Arquivo: `raw/nsmo/nsmo_v70_1324_puf.parquet` (62.359 financiamentos, 18 colunas,
+  0,9 MB).
 - Fonte: Public Use File versão 70 da NSMO, publicado pela FHFA (Federal Housing Finance
   Agency) e pela CFPB em fhfa.gov/data/nsmo/puf. O download exige aceitar os termos de uso
   no site, por isso não há script para ele. Baixado em 29/09/2026.

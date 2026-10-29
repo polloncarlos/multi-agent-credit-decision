@@ -34,6 +34,8 @@ COLUMNS = [
     "survey_wave",
     "open_year",
     "loan_type",
+    "x33",
+    "cashout",
     "dti",
     "pti",
     "ltv",
@@ -49,6 +51,17 @@ COLUMNS = [
 ]
 
 LOAN_TYPE_FHA = 2
+
+# Finalidade declarada na pesquisa (x33) e marca de refinanciamento com saque (cashout,
+# 1 = com saque), calculada pela NMDB comparando a dívida nova com a antiga.
+X33 = {
+    1: "compra",
+    2: "refinanciamento",
+    3: "inclusão ou retirada de co-tomador",
+    4: "construção",
+    5: "imóvel quitado",
+}
+CASHOUT_YES = 1
 
 # Códigos especiais do codebook (Appendix C).
 MISSING_CODES = {-2: "não se aplica", -3: "não perguntado na onda", -4: "ausente"}
