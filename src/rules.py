@@ -120,7 +120,10 @@ REASON_COLLATERAL = "garantia"
 REASON_OUT_OF_MATRIX = "fora da tabela manual"
 
 # Seguro inicial do FHA (UFMIP). Todo teto de LTV vale antes dele, e o seguro pode ser
-# somado à dívida por cima, em qualquer finalidade (II.A.2.iii).
+# somado à dívida por cima, em qualquer finalidade (II.A.2.iii). Cada banco publica o
+# CLTV de um jeito: com o seguro somado ou sem ele (a Regulation C não fixa o cálculo).
+# Por isso a faixa entre o teto e o teto com o seguro só cumpre a norma quando o CLTV
+# vem com o seguro somado.
 UFMIP = 1.75
 
 
@@ -130,13 +133,16 @@ def cap_with_ufmip(purpose: str, score: float | None) -> float:
     return round(cltv_cap(purpose, score) * (1 + UFMIP / 100), 1)
 
 
-def cltv_situation(purpose: str, cltv: float | None, score: float | None) -> str:
+def cltv_situation(
+    purpose: str, cltv: float | None, score: float | None, cltv_has_ufmip: bool
+) -> str:
     """Situação do CLTV contra o teto da finalidade.
 
     Devolve "não informado", "dentro do teto", "seguro financiado" (entre o teto e o
     teto com o seguro inicial, lacuna da base), "segundo financiamento a confirmar"
     (compra acima disso, II.A.5) ou "acima do teto" (refinanciamento acima disso).
-    Finalidade fora de CLTV_CAP devolve "sem teto na tabela".
+    Finalidade fora de CLTV_CAP devolve "sem teto na tabela". `cltv_has_ufmip` diz se o
+    CLTV foi publicado com o seguro somado; sem ele, não existe a faixa do seguro.
     """
     if sem_valor(cltv):
         return "não informado"
@@ -144,7 +150,7 @@ def cltv_situation(purpose: str, cltv: float | None, score: float | None) -> str
         return "sem teto na tabela"
     if cltv <= cltv_cap(purpose, score):
         return "dentro do teto"
-    if cltv <= cap_with_ufmip(purpose, score):
+    if cltv_has_ufmip and cltv <= cap_with_ufmip(purpose, score):
         return "seguro financiado"
     if purpose == "1":
         return "segundo financiamento a confirmar"
@@ -164,7 +170,9 @@ def combine(action: str, reasons: list[str], pending: list[str]) -> dict:
     return {"acao": action, "motivos": [], "pendencias": []}
 
 
-def expected_hmda(dti_published: str, purpose: str, cltv: float | None) -> dict:
+def expected_hmda(
+    dti_published: str, purpose: str, cltv: float | None, cltv_has_ufmip: bool
+) -> dict:
     """Resposta esperada para um pedido do HMDA, que não traz score, PTI nem reserva.
 
     Score e PTI ausentes são lacuna da base, não pendência do cliente: até 43% de DTI a
@@ -188,7 +196,7 @@ def expected_hmda(dti_published: str, purpose: str, cltv: float | None) -> dict:
         elif 48 <= dti <= 49:
             pending.append(PENDING_2_FACTORS)
 
-    situation = cltv_situation(purpose, cltv, None)
+    situation = cltv_situation(purpose, cltv, None, cltv_has_ufmip)
     if situation == "acima do teto":
         reasons.append(REASON_COLLATERAL)
     if situation == "segundo financiamento a confirmar":
@@ -204,12 +212,14 @@ def expected_nsmo(
     has_reserve: bool,
     purpose: str,
     cltv: float | None,
+    cltv_has_ufmip: bool,
 ) -> dict:
     """Resposta esperada para um caso da NSMO, com score, PTI e reserva.
 
     `purpose` usa os códigos do HMDA ("1", "31", "32"). Fora da tabela manual (PTI ou
     score) a análise manual não aprova, então a resposta é negar; esses casos saem da
-    nota pela marcação. A reserva é o único fator compensatório que a NSMO mostra.
+    nota pela marcação. A reserva é o único fator compensatório que a NSMO mostra. A
+    NSMO publica o CLTV com o seguro somado, então quem chama passa True.
     """
     reasons = []
     pending = []
@@ -228,7 +238,7 @@ def expected_nsmo(
     elif reading == "nenhum de 2 fatores verificado":
         pending.append(PENDING_2_FACTORS)
 
-    situation = cltv_situation(purpose, cltv, score)
+    situation = cltv_situation(purpose, cltv, score, cltv_has_ufmip)
     if situation == "acima do teto":
         reasons.append(REASON_COLLATERAL)
     if situation == "segundo financiamento a confirmar":
