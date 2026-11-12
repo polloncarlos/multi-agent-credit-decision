@@ -1,7 +1,8 @@
 """Regras do Handbook 4000.1 (Update 18) usadas para ler o dado: tetos de CLTV, a
 matriz de razões da análise manual (II.A.5.d.viii) e a resposta esperada de cada caso.
 
-A matriz é igual na Update 17 e na Update 18.
+As regras daqui são iguais da versão de 12/2016 à Update 18, exceto o teto do
+refinanciamento com saque, que era 85% até 2019 (ML 2019-11). Ver notebook 02, seção 6.1.
 """
 
 import math
@@ -10,7 +11,8 @@ SECTION = "II.A.5.d.viii"
 
 # Teto de CLTV por finalidade (loan_purpose do HMDA), com score a partir de 580:
 # compra (II.A.2), refinanciamento sem saque e com saque (II.A.8). O Streamline não tem
-# teto, e o HMDA não o separa dos outros refinanciamentos sem saque.
+# teto, e o HMDA não o separa dos outros refinanciamentos sem saque. O teto do saque era
+# 85% até a versão de 08/2019 do Handbook; a de 10/2019 já traz 80%.
 CLTV_CAP = {"1": 96.5, "31": 97.75, "32": 80.0}
 # Com score de 500 a 579, o LTV fica limitado a 90% em qualquer finalidade
 # (II.A.2.b.i). A norma limita o LTV; o HMDA só publica o CLTV, que é maior ou igual.
@@ -133,6 +135,11 @@ def cap_with_ufmip(purpose: str, score: float | None) -> float:
     return round(cltv_cap(purpose, score) * (1 + UFMIP / 100), 1)
 
 
+def in_ufmip_band(purpose: str, cltv: float) -> bool:
+    """True se o CLTV está entre o teto e o teto com o seguro inicial (score de 580+)."""
+    return CLTV_CAP[purpose] < cltv <= cap_with_ufmip(purpose, None)
+
+
 def cltv_situation(
     purpose: str, cltv: float | None, score: float | None, cltv_has_ufmip: bool
 ) -> str:
@@ -168,6 +175,18 @@ def combine(action: str, reasons: list[str], pending: list[str]) -> dict:
     if pending:
         return {"acao": SUSPEND, "motivos": [], "pendencias": pending}
     return {"acao": action, "motivos": [], "pendencias": []}
+
+
+def split_answers(answers: list[dict]) -> tuple[list[str], list[str], list[str]]:
+    """Separa as respostas em três listas: ação, pendências e motivos (em texto)."""
+    actions = []
+    pending = []
+    reasons = []
+    for answer in answers:
+        actions.append(answer["acao"])
+        pending.append("; ".join(answer["pendencias"]))
+        reasons.append("; ".join(answer["motivos"]))
+    return actions, pending, reasons
 
 
 def expected_hmda(

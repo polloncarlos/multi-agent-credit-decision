@@ -87,6 +87,19 @@ def section_text(version: str, start: str, end: str) -> str:
     return text.lower().strip()
 
 
+@lru_cache(maxsize=9)
+def full_text(version: str) -> str:
+    """Texto do PDF inteiro numa linha só, em minúsculas."""
+    joined = " ".join(pages(version))
+    return re.sub(r"\s+", " ", joined).lower()
+
+
+def has_sentence(version: str, sentence: str) -> bool:
+    """True se a frase aparece na versão, sem contar espaços nem maiúsculas."""
+    clean = re.sub(r"\s+", " ", sentence).lower()
+    return clean in full_text(version)
+
+
 def changed_sentences(old: str, new: str, start: str, end: str) -> list[str]:
     """Frases do trecho que mudaram entre duas versões ('-' antiga, '+' nova)."""
     old_sentences = re.split(r"(?<=[.;:])\s+", section_text(old, start, end))

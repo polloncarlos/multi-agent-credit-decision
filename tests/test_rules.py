@@ -21,7 +21,9 @@ from src.rules import (
     cltv_situation,
     expected_hmda,
     expected_nsmo,
+    in_ufmip_band,
     manual_requirement,
+    split_answers,
 )
 
 NAN = math.nan
@@ -203,3 +205,31 @@ def test_nsmo_dois_fatores_com_reserva_pede_o_segundo():
 def test_nsmo_pti_acima_de_40_fora_da_tabela():
     resposta = expected_nsmo(46, 42, 650, True, "1", 96.5, True)
     assert resposta["motivos"] == [REASON_OUT_OF_MATRIX]
+
+
+# Faixa do seguro e separação das respostas em colunas.
+
+
+def test_faixa_do_seguro_na_compra():
+    assert in_ufmip_band("1", 97.0)
+    assert not in_ufmip_band("1", 96.5)
+    assert not in_ufmip_band("1", 98.5)
+
+
+def test_faixa_do_seguro_com_cltv_vazio():
+    assert not in_ufmip_band("32", NAN)
+
+
+def test_split_answers_junta_pendencias_e_motivos():
+    respostas = [
+        {
+            "acao": SUSPEND,
+            "motivos": [],
+            "pendencias": [PENDING_1_FACTOR, PENDING_SECOND_LIEN],
+        },
+        {"acao": DENY, "motivos": [REASON_DTI, REASON_COLLATERAL], "pendencias": []},
+    ]
+    acoes, pendencias, motivos = split_answers(respostas)
+    assert acoes == [SUSPEND, DENY]
+    assert pendencias == [PENDING_1_FACTOR + "; " + PENDING_SECOND_LIEN, ""]
+    assert motivos == ["", REASON_DTI + "; " + REASON_COLLATERAL]
