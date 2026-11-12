@@ -40,6 +40,20 @@ FHFA. Para refazê-lo, salvar o CSV e os termos em `raw/nsmo/` (ou na pasta indi
 > accuracy, or timeliness of the data, or analyses derived from these data after the data
 > has been retrieved from FHFA.gov.
 
+## Arquivos preparados (`processed/`)
+
+Gerados pelo notebook `02_data_preparation.ipynb` a partir dos arquivos de `raw/`.
+
+- `hmda_casos.parquet`: os 938.903 pedidos do HMDA que ficam na avaliação, com as
+  marcações e a resposta esperada pela norma.
+- `nsmo_casos.parquet`: os 718 financiamentos FHA da NSMO com DTI de 44% a 50%.
+- `conjuntos_fixos.parquet`: os 44 casos separados para regressão de prompt, demo e
+  checagem à parte (38 do HMDA e 6 da NSMO).
+
+Dois desses arquivos têm dado da NSMO, por isso a pasta leva uma cópia dos termos de uso
+(`processed/nsmo_terms_of_service.pdf`). Valem as mesmas regras e o mesmo aviso da FHFA
+descritos acima.
+
 ## Aviso
 
 Este projeto é de portfólio e não serve para decisão real de crédito.
