@@ -48,6 +48,7 @@ COLUMNS = [
     "x5001",
     "x36c",
     "x36d",
+    "x66",
 ]
 
 LOAN_TYPE_FHA = 2
@@ -77,6 +78,15 @@ X5001 = {
 # x36c = ajuda ou empréstimo de órgão público ou entidade sem fins lucrativos;
 # x36d = segundo financiamento, home equity ou HELOC.
 X36 = {1: "usou", 2: "não usou"}
+
+# Uso do imóvel no dia da pesquisa (x66), respondida meses depois do fechamento.
+X66 = {
+    1: "residência principal",
+    2: "vai ser a residência principal em breve",
+    3: "segunda casa ou de temporada",
+    4: "casa de parentes",
+    5: "aluguel ou investimento",
+}
 
 
 def save_nsmo_parquet(
