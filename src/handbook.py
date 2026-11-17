@@ -71,13 +71,19 @@ def find_section(heading: str, version: str = "update_18") -> tuple[int, str]:
 def excerpt(text: str, start: str, end: str | None = None) -> str:
     """Trecho de `text` entre as linhas que começam com `start` e `end`."""
     i = text.index(start)
-    j = text.index(end, i) if end else len(text)
+    if end:
+        j = text.index(end, i)
+    else:
+        j = len(text)
     return text[i:j].strip()
 
 
 def section_text(version: str, start: str, end: str) -> str:
     """Trecho entre `start` e `end` numa linha só, em minúsculas e sem formatação."""
-    full = "\n".join(_body(p) for p in pages(version))
+    bodies = []
+    for page in pages(version):
+        bodies.append(_body(page))
+    full = "\n".join(bodies)
     i = full.index(start)
     j = full.index(end, i)
     text = re.sub(r"\s+", " ", full[i:j])

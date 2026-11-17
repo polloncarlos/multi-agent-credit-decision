@@ -99,11 +99,10 @@ DENIAL_INVISIBLE = {"2", "3", "6"}
 DENIAL_VISIBLE = {"1", "4"}
 
 # Ordem das faixas de DTI como o HMDA publica (36 a 49 vêm como valor individual).
-DTI_ORDER = (
-    ["<20%", "20%-<30%", "30%-<36%"]
-    + [str(v) for v in range(36, 50)]
-    + ["50%-60%", ">60%", "NA", "Exempt"]
-)
+DTI_ORDER = ["<20%", "20%-<30%", "30%-<36%"]
+for _value in range(36, 50):
+    DTI_ORDER.append(str(_value))
+DTI_ORDER += ["50%-60%", ">60%", "NA", "Exempt"]
 
 
 def save_hmda_parquet(
